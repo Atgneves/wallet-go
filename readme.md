@@ -1,56 +1,77 @@
 # RP Wallet - Go Implementation
 
-A high-performance wallet management service built with Go, responsible for managing user wallet monetary transactions.
+A high-performance digital wallet management service built with Go, featuring MongoDB for data persistence and Apache Kafka for asynchronous transaction processing. This implementation maintains clean architecture principles with domain-driven design.
 
-## Architecture
+## 🏗️ Architecture
 
-This Go implementation maintains the same architecture as the original Java Spring Boot version:
+This Go implementation follows the same architectural patterns as the original Java Spring Boot version while leveraging Go's performance advantages:
 
-- **Clean Architecture** with domain-driven design
-- **MongoDB** with replica set for data persistence
+- **Hexagonal Architecture** with clear domain boundaries
+- **MongoDB** for reliable data persistence
 - **Apache Kafka** for asynchronous transaction processing
-- **RESTful API** with comprehensive error handling
-- **Health checks** for MongoDB and Kafka
-- **Swagger documentation** for API exploration
+- **RESTful API** with comprehensive error handling and validation
+- **Health monitoring** for all critical components
+- **Concurrent processing** with wallet-level locking for transaction safety
 
-## Features
+## ✨ Features
 
-- ✅ **Wallet Management**: Create, update, and query wallets
-- ✅ **Asynchronous Transactions**: Deposit, withdraw, and transfer via Kafka
-- ✅ **Balance Tracking**: Real-time balance updates with transaction history
-- ✅ **Operation History**: Complete audit trail of all operations
-- ✅ **Daily Summaries**: Aggregate transaction data by date
-- ✅ **Concurrency Control**: Wallet-level locking for transaction safety
-- ✅ **Health Monitoring**: MongoDB and Kafka health indicators
-- ✅ **Error Handling**: Comprehensive exception handling with proper HTTP status codes
+- ✅ **Wallet Management**: Create, update, activate/deactivate, and query wallets
+- ✅ **Asynchronous Transactions**: Deposit, withdraw, and transfer operations via Kafka
+- ✅ **Real-time Balance Tracking**: Immediate balance updates with complete transaction history
+- ✅ **Operation Audit Trail**: Comprehensive logging of all wallet operations
+- ✅ **Daily Transaction Summaries**: Aggregate transaction reports by date
+- ✅ **Concurrency Control**: Wallet-level locking prevents race conditions
+- ✅ **Business Rule Validation**: Insufficient funds, inactive/blocked wallet checks
+- ✅ **Health Monitoring**: MongoDB and Kafka connectivity monitoring
+- ✅ **Error Handling**: Proper HTTP status codes with detailed error messages
 
 ## Project Structure
 
 ```
-.
-├── cmd/                    # Application entrypoints
-├── configs/                # Configuration files
+wallet-go/
+├── cmd/
+│   └── api/
+│       └── main.go              # Application entrypoint
 ├── internal/
-│   ├── api/               # API layer (controllers, DTOs)
-│   │   ├── operation/
-│   │   └── wallet/
-│   ├── config/            # Configuration management
-│   ├── domain/            # Business logic layer
-│   │   ├── health/
-│   │   ├── operation/
-│   │   └── wallet/
-│   └── infrastructure/    # External dependencies
-│       ├── database/
-│       ├── kafka/
-│       ├── middleware/
-│       └── router/
-├── pkg/                   # Shared packages
-│   └── logger/
-├── docker-compose.yml
-├── Dockerfile
-├── Makefile
-└── README.md
+│   ├── wallet/                  # Wallet Domain
+│   │   ├── handler.go           # HTTP handlers (REST controllers)
+│   │   ├── service.go           # Business logic implementation
+│   │   ├── store.go             # MongoDB repository
+│   │   ├── types.go             # Domain models and DTOs
+│   │   └── validator.go         # Business rule validation
+│   ├── operation/               # Operation Domain
+│   │   ├── handler.go           # Operation REST endpoints
+│   │   ├── service.go           # Operation business logic
+│   │   ├── store.go             # Operation data access
+│   │   └── types.go             # Operation models and enums
+│   ├── health/                  # Health Check Domain
+│   │   ├── handler.go           # Health check endpoints
+│   │   ├── service.go           # Health check logic
+│   │   └── types.go             # Health status models
+│   ├── shared/                  # Shared Infrastructure
+│   │   ├── config/              # Configuration management
+│   │   ├── database/            # MongoDB client
+│   │   ├── kafka/               # Kafka producer/consumer
+│   │   ├── middleware/          # HTTP middlewares
+│   │   ├── errors/              # Custom error types
+│   │   └── utils/               # Utilities (locking, etc.)
+│   └── router/                  # HTTP router configuration
+├── pkg/                         # Shared packages (if needed)
+├── go.mod                       # Go module definition
+├── go.sum                       # Dependency checksums
+├── docker-compose.yml           # Development environment
+├── Dockerfile                   # Container build
+├── Makefile                     # Development commands
+└── README.md                    # This documentation
 ```
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Go 1.21+** - [Download](https://golang.org/dl/)
+- **Docker & Docker Compose** - [Install Docker](https://docs.docker.com/get-docker/)
+- **Make** (optional) - For convenient command execution
+
 ## Access Services
 
 - **API**: http://localhost:8080/api
@@ -58,36 +79,74 @@ This Go implementation maintains the same architecture as the original Java Spri
 - **Health Check**: http://localhost:8080/health
 - **Kafka UI**: http://localhost:8090
 
-## API Endpoints
+## 📚 API Reference
 
-### Wallets
+### 💳 Wallet Management
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/wallet` | List all wallets |
-| GET | `/api/wallet/{id}` | Get wallet by ID |
-| POST | `/api/wallet` | Create new wallet |
-| PATCH | `/api/wallet/{id}` | Update wallet status |
-| POST | `/api/wallet/{id}/deposit` | Deposit funds (async) |
-| POST | `/api/wallet/{id}/withdraw` | Withdraw funds (async) |
-| POST | `/api/wallet/{id}/transfer` | Transfer funds (async) |
+| Method | Endpoint | Description | Request Body |
+|--------|----------|-------------|--------------|
+| `GET` | `/wallet` | List all wallets | - |
+| `GET` | `/wallet/{id}` | Get wallet by ID | - |
+| `POST` | `/wallet` | Create new wallet | `{"customerId": "string"}` |
+| `PATCH` | `/wallet/{id}` | Update wallet status | `{"active": bool, "blocked": bool}` |
 
-### Operations
+#### Example: Create Wallet
+```bash
+curl -X POST http://localhost:8080/wallet \
+  -H "Content-Type: application/json" \
+  -d '{"customerId": "customer-123"}'
+```
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/operations` | List operations with filters |
-| GET | `/operations/{id}` | Get operation by ID |
-| GET | `/operations/daily-summary` | Get daily summary |
-| GET | `/operations/daily-summary-details` | Get detailed daily summary |
+### 💰 Transaction Operations (Asynchronous)
 
-### Health
+| Method | Endpoint | Description | Request Body |
+|--------|----------|-------------|--------------|
+| `POST` | `/wallet/{id}/deposit` | Deposit funds | `{"amountInCents": number}` |
+| `POST` | `/wallet/{id}/withdraw` | Withdraw funds | `{"amountInCents": number}` |
+| `POST` | `/wallet/{id}/transfer` | Transfer funds | `{"amountInCents": number, "walletDestinationId": "uuid"}` |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Basic health check |
-| GET | `/health/details` | Detailed health check |
+#### Example: Deposit Funds
+```bash
+curl -X POST http://localhost:8080/wallet/{wallet-id}/deposit \
+  -H "Content-Type: application/json" \
+  -d '{"amountInCents": 10000}'
+```
 
+#### Example: Transfer Funds
+```bash
+curl -X POST http://localhost:8080/wallet/{source-wallet-id}/transfer \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountInCents": 5000,
+    "walletDestinationId": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+### 📊 Operation History & Reports
+
+| Method | Endpoint | Description | Query Parameters |
+|--------|----------|-------------|------------------|
+| `GET` | `/operations` | List operations | `walletId`, `from`, `to` |
+| `GET` | `/operations/{id}` | Get operation details | - |
+| `GET` | `/operations/daily-summary` | Daily summary | `walletId`, `date` |
+| `GET` | `/operations/daily-summary-details` | Detailed daily summary | `walletId`, `date` |
+
+#### Example: Get Operation History
+```bash
+curl "http://localhost:8080/operations?walletId={uuid}&from=2024-01-01&to=2024-01-31"
+```
+
+#### Example: Daily Summary
+```bash
+curl "http://localhost:8080/operations/daily-summary?walletId={uuid}&date=2024-01-15"
+```
+
+### 🏥 Health Monitoring
+
+| Method | Endpoint | Description | Response |
+|--------|----------|-------------|----------|
+| `GET` | `/health` | Basic health status | `{"status": "UP/DOWN"}` |
+| `GET` | `/health/details` | Detailed health info | Component-level status |
 
 ## Transaction Flow
 
@@ -117,6 +176,7 @@ The application provides comprehensive health checks:
 > This software is the confidential and proprietary information of **Alan Neves**.  
 > Unauthorized copying of this file, via any medium, is strictly prohibited.  
 >  
-> **Project:** Wallet API (Go)  
+> **Project:** *Wallet API* (Go)  
 > **Description:** Digital wallet management API.
+
 
