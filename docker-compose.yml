@@ -1,0 +1,92 @@
+services:
+  # MongoDB Primary
+  mongo-primary:
+    image: mongo:7.0
+    container_name: mongo-primary
+    hostname: mongo-primary
+    restart: unless-stopped
+    command: mongod --replSet rs0 --bind_ip_all --port 27017
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_primary_data:/data/db
+    networks:
+      - mongo-cluster
+
+  # MongoDB Secondary 1
+  mongo-secondary1:
+    image: mongo:7.0
+    container_name: mongo-secondary1
+    hostname: mongo-secondary1
+    restart: unless-stopped
+    command: mongod --replSet rs0 --bind_ip_all --port 27017
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_secondary1_data:/data/db
+    networks:
+      - mongo-cluster
+    depends_on:
+      - mongo-primary
+
+  # MongoDB Secondary 2
+  mongo-secondary2:
+    image: mongo:7.0
+    container_name: mongo-secondary2
+    hostname: mongo-secondary2
+    restart: unless-stopped
+    command: mongod --replSet rs0 --bind_ip_all --port 27017
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo_secondary2_data:/data/db
+    networks:
+      - mongo-cluster
+    depends_on:
+      - mongo-primary
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      - kafka
+
+volumes:
+  mongo_primary_data:
+  mongo_secondary1_data:
+  mongo_secondary2_data:
+
+networks:
+  mongo-cluster:
+    driver: bridge

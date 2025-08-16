@@ -72,6 +72,30 @@ wallet-go/
 - **Docker & Docker Compose** - [Install Docker](https://docs.docker.com/get-docker/)
 - **Make** (optional) - For convenient command execution
 
+### Creating the MongoDB container using Docker Compose
+
+
+### *OBS*:   If necessary, edit etc/hosts adding the hostnames for localhost
+
+```sudo  nano /etc/hosts```
+
+```127.0.0.1 mongo-primary```
+
+```127.0.0.1 mongo-secondary1```
+
+```127.0.0.1 mongo-secondary2```
+
+
+
+#### 1. Launch containers
+```docker-compose up -d```
+
+#### 2. Wait for containers to be ready
+```sleep 30```
+
+#### 3. Initialize replica set
+```docker exec -i mongo-primary mongosh < init-replica.js```
+
 ## Access Services
 
 - **API**: http://localhost:8080/api

@@ -1,12 +1,13 @@
 package wallet
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Wallet struct {
-	ID                   uuid.UUID  `bson:"walletId" json:"walletId"`
+	WalletID             uuid.UUID  `bson:"walletId" json:"walletId"`
 	CustomerID           string     `bson:"customerId" json:"customerId"`
 	CurrentAmountInCents int64      `bson:"currentAmountInCents" json:"currentAmountInCents"`
 	Active               bool       `bson:"active" json:"active"`

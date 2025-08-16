@@ -2,7 +2,8 @@ package wallet
 
 import (
 	"fmt"
-	"github.com/Atgneves/wallet-go/internal/shared/errors"
+
+	"wallet-go/internal/shared/errors"
 )
 
 type Validator struct{}
