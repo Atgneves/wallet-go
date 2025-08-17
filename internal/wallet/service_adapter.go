@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -34,7 +35,6 @@ func (sa *ServiceAdapter) Transfer(ctx context.Context, sourceID uuid.UUID, requ
 	return err
 }
 
-// Método auxiliar para converter de kafka types para wallet types
 func (sa *ServiceAdapter) DepositFromKafka(ctx context.Context, walletID uuid.UUID, amountInCents int64) error {
 	request := WalletTransactionRequest{
 		AmountInCents: amountInCents,
@@ -43,16 +43,30 @@ func (sa *ServiceAdapter) DepositFromKafka(ctx context.Context, walletID uuid.UU
 }
 
 func (sa *ServiceAdapter) WithdrawFromKafka(ctx context.Context, walletID uuid.UUID, amountInCents int64) error {
+	log.Printf("ServiceAdapter.WithdrawFromKafka - walletID: %s, amount: %d", walletID, amountInCents)
 	request := WalletTransactionRequest{
 		AmountInCents: amountInCents,
 	}
-	return sa.Withdraw(ctx, walletID, request)
+	err := sa.Withdraw(ctx, walletID, request)
+	if err != nil {
+		log.Printf("ServiceAdapter.WithdrawFromKafka - ERROR: %v", err)
+	} else {
+		log.Printf("ServiceAdapter.WithdrawFromKafka - SUCCESS")
+	}
+	return err
 }
 
 func (sa *ServiceAdapter) TransferFromKafka(ctx context.Context, sourceID uuid.UUID, amountInCents int64, destinationID uuid.UUID) error {
+	log.Printf("ServiceAdapter.TransferFromKafka - sourceID: %s, amount: %d, destinationID: %s", sourceID, amountInCents, destinationID)
 	request := WalletTransactionTransferRequest{
 		AmountInCents:       amountInCents,
 		WalletDestinationID: destinationID,
 	}
-	return sa.Transfer(ctx, sourceID, request)
+	err := sa.Transfer(ctx, sourceID, request)
+	if err != nil {
+		log.Printf("ServiceAdapter.TransferFromKafka - ERROR: %v", err)
+	} else {
+		log.Printf("ServiceAdapter.TransferFromKafka - SUCCESS")
+	}
+	return err
 }

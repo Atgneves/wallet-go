@@ -74,7 +74,7 @@ func (s *Store) FindByWalletIDAndDateRange(ctx context.Context, walletID uuid.UU
 		},
 	}
 
-	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: 1}})
 	cursor, err := s.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (s *Store) FindByWalletIDAndDate(ctx context.Context, walletID uuid.UUID, d
 		},
 	}
 
-	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: 1}})
 	cursor, err := s.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err

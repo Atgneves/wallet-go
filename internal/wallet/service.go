@@ -3,6 +3,7 @@ package wallet
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 	"wallet-go/internal/operation/enum"
 
@@ -159,7 +160,26 @@ func (s *Service) Withdraw(ctx context.Context, walletID uuid.UUID, request Wall
 }
 
 func (s *Service) Transfer(ctx context.Context, sourceID uuid.UUID, request WalletTransactionTransferRequest) (*Wallet, error) {
-	// Sort IDs to prevent deadlocks
+	log.Printf("Transfer started - sourceID: %s, destinationID: %s, amount: %d", sourceID, request.WalletDestinationID, request.AmountInCents)
+
+	// ✅ VERIFICAR WALLETS IGUAIS ANTES DOS LOCKS
+	if sourceID == request.WalletDestinationID {
+		log.Printf("Same wallet transfer detected - getting wallet for error operation")
+
+		// Buscar a wallet apenas para criar a operação de erro
+		sourceWallet, err := s.getWalletOrThrow(ctx, sourceID)
+		if err != nil {
+			return nil, err
+		}
+
+		log.Printf("Creating error operation for same wallet transfer")
+		s.handleErrorOperation(ctx, sourceWallet, enum.OperationTypeTransfer, -request.AmountInCents,
+			"Cannot process transaction. The source and destination wallets must be different!")
+		log.Printf("Error operation created, returning error")
+		return nil, errors.SameWalletTransferNotAllowed()
+	}
+
+	// Sort IDs  para previnir deadlocks (agora só executa se wallets são diferentes)
 	var firstID, secondID uuid.UUID
 	if sourceID.String() < request.WalletDestinationID.String() {
 		firstID, secondID = sourceID, request.WalletDestinationID
@@ -167,10 +187,12 @@ func (s *Service) Transfer(ctx context.Context, sourceID uuid.UUID, request Wall
 		firstID, secondID = request.WalletDestinationID, sourceID
 	}
 
+	log.Printf("Locking wallets - first: %s, second: %s", firstID, secondID)
 	s.lockManager.LockWallet(firstID)
 	defer s.lockManager.UnlockWallet(firstID)
 	s.lockManager.LockWallet(secondID)
 	defer s.lockManager.UnlockWallet(secondID)
+	log.Printf("Wallets locked successfully")
 
 	sourceWallet, err := s.getWalletOrThrow(ctx, sourceID)
 	if err != nil {
@@ -182,6 +204,7 @@ func (s *Service) Transfer(ctx context.Context, sourceID uuid.UUID, request Wall
 		return nil, err
 	}
 
+	// Esta validação agora é redundante, mas posso manter por segurança
 	if sourceWallet.WalletID == destinationWallet.WalletID {
 		s.handleErrorOperation(ctx, sourceWallet, enum.OperationTypeTransfer, -request.AmountInCents,
 			"Cannot process transaction. The source and destination wallets must be different!")

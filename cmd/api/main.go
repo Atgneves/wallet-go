@@ -75,6 +75,10 @@ func main() {
 	// Start Kafka consumers
 	go kafkaConsumer.StartConsumers()
 
+	// Dar um tempo para os consumers iniciarem
+	time.Sleep(2 * time.Second)
+	log.Println("Kafka consumers should be running now...")
+
 	// Setup router
 	r := router.Setup(mongoClient, kafkaProducer, cfg)
 
