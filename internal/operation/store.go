@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"wallet-go/internal/shared/database"
+
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,6 +27,27 @@ func (s *Store) Create(ctx context.Context, operation *Operation) error {
 
 	_, err := s.collection.InsertOne(ctx, operation)
 	return err
+}
+
+func (s *Store) FindByWalletID(ctx context.Context, walletID uuid.UUID) ([]*Operation, error) {
+	filter := bson.M{"walletId": walletID}
+
+	cursor, err := s.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var operations []*Operation
+	for cursor.Next(ctx) {
+		var operation Operation
+		if err := cursor.Decode(&operation); err != nil {
+			return nil, err
+		}
+		operations = append(operations, &operation)
+	}
+
+	return operations, cursor.Err()
 }
 
 func (s *Store) FindByID(ctx context.Context, operationID uuid.UUID) (*Operation, error) {

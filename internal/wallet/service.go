@@ -2,12 +2,14 @@ package wallet
 
 import (
 	"context"
+	"fmt"
 	"time"
+	"wallet-go/internal/operation/enum"
 
 	"wallet-go/internal/operation"
-	"wallet-go/internal/operation/enum"
 	"wallet-go/internal/shared/errors"
 	"wallet-go/internal/shared/utils"
+
 	"github.com/google/uuid"
 )
 
@@ -88,11 +90,15 @@ func (s *Service) GetByID(ctx context.Context, walletID uuid.UUID) (*Wallet, err
 }
 
 func (s *Service) List(ctx context.Context) ([]*Wallet, error) {
+	fmt.Printf("DEBUG: WalletService.List() - iniciando busca no store...\n")
+
 	wallets, err := s.store.FindAll(ctx)
 	if err != nil {
+		fmt.Printf("DEBUG: WalletService.List() - erro no store.FindAll(): %v\n", err)
 		return nil, errors.InternalServerError("Failed to list wallets")
 	}
 
+	fmt.Printf("DEBUG: WalletService.List() - store retornou %d wallets\n", len(wallets))
 	return wallets, nil
 }
 
@@ -128,8 +134,7 @@ func (s *Service) Deposit(ctx context.Context, walletID uuid.UUID, request Walle
 
 	validatedWallet, err := s.validator.EnsureValidForOperation(wallet, "Wallet")
 	if err != nil {
-		s.handleErrorOperation(ctx, wallet, enum.OperationTypeDeposit, request.AmountInCents,
-			err.(*errors.AppError).Message)
+		s.handleErrorOperation(ctx, wallet, enum.OperationTypeDeposit, request.AmountInCents, err.(*errors.AppError).Message)
 		return nil, err
 	}
 
@@ -146,8 +151,7 @@ func (s *Service) Withdraw(ctx context.Context, walletID uuid.UUID, request Wall
 	}
 
 	if err := s.validator.ValidateForDebitOperation(wallet, "Source wallet", request.AmountInCents); err != nil {
-		s.handleErrorOperation(ctx, wallet, enum.OperationTypeWithdraw, -request.AmountInCents,
-			err.(*errors.AppError).Message)
+		s.handleErrorOperation(ctx, wallet, enum.OperationTypeWithdraw, -request.AmountInCents, err.(*errors.AppError).Message)
 		return nil, err
 	}
 
@@ -190,7 +194,7 @@ func (s *Service) Transfer(ctx context.Context, sourceID uuid.UUID, request Wall
 	}
 
 	if _, err := s.validator.EnsureValidForOperation(destinationWallet, "Destination wallet"); err != nil {
-		s.handleErrorOperation(ctx, sourceWallet, enum.OperationTypeReceiveTransfer, -request.AmountInCents, err.(*errors.AppError).Message)
+		s.handleErrorOperation(ctx, sourceWallet, enum.OperationTypeTransfer, -request.AmountInCents, err.(*errors.AppError).Message)
 		return nil, err
 	}
 
@@ -308,8 +312,7 @@ func (s *Service) executeTransfer(ctx context.Context, sourceWallet, destination
 	return sourceWallet, nil
 }
 
-func (s *Service) handleErrorOperation(ctx context.Context, wallet *Wallet, opType enum.OperationType,
-	amountInCents int64, message string) {
+func (s *Service) handleErrorOperation(ctx context.Context, wallet *Wallet, opType enum.OperationType, amountInCents int64, message string) {
 	if wallet == nil {
 		return
 	}

@@ -9,6 +9,7 @@ import (
 	"wallet-go/internal/shared/middleware"
 	"wallet-go/internal/shared/utils"
 	"wallet-go/internal/wallet"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,7 +43,7 @@ func Setup(mongoClient *database.MongoClient, kafkaProducer *kafka.Producer, cfg
 	healthService := health.NewService(mongoClient, []string{cfg.Kafka.Brokers[0]}, cfg)
 
 	// Handlers
-	walletHandler := wallet.NewHandler(walletService, kafkaProducer, cfg.Kafka.Topics.Deposit, cfg.Kafka.Topics.Withdraw, cfg.Kafka.Topics.Transfer)
+	walletHandler := wallet.NewHandler(walletService, operationService, kafkaProducer, cfg.Kafka.Topics.Deposit, cfg.Kafka.Topics.Withdraw, cfg.Kafka.Topics.Transfer)
 	operationHandler := operation.NewHandler(operationService)
 	healthHandler := health.NewHandler(healthService)
 

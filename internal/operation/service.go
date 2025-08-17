@@ -3,9 +3,10 @@ package operation
 import (
 	"context"
 	"time"
-
 	"wallet-go/internal/operation/enum"
+
 	"wallet-go/internal/shared/errors"
+
 	"github.com/google/uuid"
 )
 
@@ -17,6 +18,21 @@ func NewService(store *Store) *Service {
 	return &Service{
 		store: store,
 	}
+}
+
+func (s *Service) GetByWalletID(ctx context.Context, walletID uuid.UUID) ([]Operation, error) {
+	operationPointers, err := s.store.FindByWalletID(ctx, walletID)
+	if err != nil {
+		return nil, errors.InternalServerError("Failed to get operations")
+	}
+
+	// Converter []*Operation para []Operation
+	operations := make([]Operation, len(operationPointers))
+	for i, op := range operationPointers {
+		operations[i] = *op
+	}
+
+	return operations, nil
 }
 
 func (s *Service) GetByID(ctx context.Context, operationID uuid.UUID) (*Operation, error) {

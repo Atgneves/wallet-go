@@ -3,19 +3,22 @@ package wallet
 import (
 	"time"
 
+	"wallet-go/internal/operation"
+
 	"github.com/google/uuid"
 )
 
 type Wallet struct {
-	WalletID             uuid.UUID  `bson:"walletId" json:"walletId"`
-	CustomerID           string     `bson:"customerId" json:"customerId"`
-	CurrentAmountInCents int64      `bson:"currentAmountInCents" json:"currentAmountInCents"`
-	Active               bool       `bson:"active" json:"active"`
-	Blocked              bool       `bson:"blocked" json:"blocked"`
-	CreatedAt            time.Time  `bson:"createdAt" json:"createdAt"`
-	UpdatedAt            time.Time  `bson:"updatedAt" json:"updatedAt"`
-	BlockedAt            *time.Time `bson:"blockedAt,omitempty" json:"blockedAt,omitempty"`
-	UnblockedAt          *time.Time `bson:"unblockedAt,omitempty" json:"unblockedAt,omitempty"`
+	WalletID             uuid.UUID             `bson:"walletId" json:"walletId"`
+	CustomerID           string                `bson:"customerId" json:"customerId"`
+	CurrentAmountInCents int64                 `bson:"currentAmountInCents" json:"currentAmountInCents"`
+	Operations           []operation.Operation `bson:"-" json:"operations,omitempty"` // ← NÃO salvar no MongoDB (bson:"-")
+	Active               bool                  `bson:"active" json:"active"`
+	Blocked              bool                  `bson:"blocked" json:"blocked"`
+	CreatedAt            time.Time             `bson:"createdAt" json:"createdAt"`
+	UpdatedAt            time.Time             `bson:"updatedAt" json:"updatedAt"`
+	BlockedAt            *time.Time            `bson:"blockedAt,omitempty" json:"blockedAt,omitempty"`
+	UnblockedAt          *time.Time            `bson:"unblockedAt,omitempty" json:"unblockedAt,omitempty"`
 }
 
 type WalletRequest struct {
@@ -48,15 +51,16 @@ type WalletKafkaTransactionTransferMessage struct {
 }
 
 type WalletResponse struct {
-	ID                   uuid.UUID  `json:"id"`
-	CustomerID           string     `json:"customerId"`
-	CurrentAmountInCents int64      `json:"currentAmountInCents"`
-	Active               bool       `json:"active"`
-	Blocked              bool       `json:"blocked"`
-	CreatedAt            time.Time  `json:"createdAt"`
-	UpdatedAt            time.Time  `json:"updatedAt"`
-	BlockedAt            *time.Time `json:"blockedAt,omitempty"`
-	UnblockedAt          *time.Time `json:"unblockedAt,omitempty"`
+	Id                   uuid.UUID             `json:"id"`
+	CustomerID           string                `json:"customerId"`
+	CurrentAmountInCents int64                 `json:"currentAmountInCents"`
+	Operations           []operation.Operation `json:"operations,omitempty"`
+	Active               bool                  `json:"active"`
+	Blocked              bool                  `json:"blocked"`
+	CreatedAt            time.Time             `json:"createdAt"`
+	UpdatedAt            time.Time             `json:"updatedAt"`
+	BlockedAt            *time.Time            `json:"blockedAt,omitempty"`
+	UnblockedAt          *time.Time            `json:"unblockedAt,omitempty"`
 }
 
 // Wallet methods

@@ -1,29 +1,34 @@
 package wallet
 
 import (
+	"fmt"
 	"net/http"
 
+	"wallet-go/internal/operation"
 	"wallet-go/internal/shared/errors"
 	"wallet-go/internal/shared/kafka"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type Handler struct {
-	service       *Service
-	producer      *kafka.Producer
-	topicDeposit  string
-	topicWithdraw string
-	topicTransfer string
+	service          *Service
+	operationService *operation.Service
+	producer         *kafka.Producer
+	topicDeposit     string
+	topicWithdraw    string
+	topicTransfer    string
 }
 
-func NewHandler(service *Service, producer *kafka.Producer, topicDeposit, topicWithdraw, topicTransfer string) *Handler {
+func NewHandler(service *Service, operationService *operation.Service, producer *kafka.Producer, topicDeposit, topicWithdraw, topicTransfer string) *Handler {
 	return &Handler{
-		service:       service,
-		producer:      producer,
-		topicDeposit:  topicDeposit,
-		topicWithdraw: topicWithdraw,
-		topicTransfer: topicTransfer,
+		service:          service,
+		operationService: operationService,
+		producer:         producer,
+		topicDeposit:     topicDeposit,
+		topicWithdraw:    topicWithdraw,
+		topicTransfer:    topicTransfer,
 	}
 }
 
@@ -66,6 +71,16 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
+	// Carregar operações da carteira
+	operations, err := h.operationService.GetByWalletID(c.Request.Context(), walletID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errors.InternalServerError("Failed to load wallet operations"))
+		return
+	}
+
+	// Adicionar operações à carteira
+	wallet.Operations = operations
+
 	response := h.mapToResponse(wallet)
 	c.JSON(http.StatusOK, response)
 }
@@ -79,6 +94,15 @@ func (h *Handler) List(c *gin.Context) {
 
 	responses := make([]WalletResponse, len(wallets))
 	for i, wallet := range wallets {
+		// Carregar operações para cada carteira
+		operations, err := h.operationService.GetByWalletID(c.Request.Context(), wallet.WalletID)
+		if err != nil {
+			fmt.Printf("DEBUG: Erro ao carregar operações para wallet %s: %v\n", wallet.WalletID, err)
+			// Não quebrar por causa das operações - apenas não incluir
+		} else {
+			wallet.Operations = operations
+		}
+
 		responses[i] = *h.mapToResponse(wallet)
 	}
 
@@ -204,11 +228,13 @@ func (h *Handler) Transfer(c *gin.Context) {
 	c.JSON(http.StatusAccepted, response)
 }
 
+// mapToResponse mapeia Wallet para WalletResponse
 func (h *Handler) mapToResponse(wallet *Wallet) *WalletResponse {
 	return &WalletResponse{
-		ID:                   wallet.WalletID,
+		Id:                   wallet.WalletID,
 		CustomerID:           wallet.CustomerID,
 		CurrentAmountInCents: wallet.CurrentAmountInCents,
+		Operations:           wallet.Operations, // ← Vai incluir as operações carregadas
 		Active:               wallet.Active,
 		Blocked:              wallet.Blocked,
 		CreatedAt:            wallet.CreatedAt,

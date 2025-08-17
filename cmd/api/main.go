@@ -50,6 +50,19 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
+	// Criar tópicos automaticamente
+	topics := []string{
+		cfg.Kafka.Topics.Deposit,
+		cfg.Kafka.Topics.Withdraw,
+		cfg.Kafka.Topics.Transfer,
+	}
+
+	if err := kafka.CreateTopics(cfg.Kafka.Brokers, topics); err != nil {
+		log.Printf("Warning: Could not create Kafka topics: %v", err)
+	} else {
+		log.Println("Kafka topics created/verified successfully")
+	}
+
 	kafkaConsumer, err := kafka.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.GroupID)
 	if err != nil {
 		log.Fatal("Failed to create Kafka consumer:", err)
