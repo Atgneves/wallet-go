@@ -13,9 +13,6 @@ const docTemplate = `{
             "name": "Alan Neves",
             "email": "alanagro.ufv@gmail.com"
         },
-        "license": {
-            "name": "MIT"
-        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -136,6 +133,108 @@ const docTemplate = `{
                                 },
                                 "message": {
                                     "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet/daily-summary": {
+            "get": {
+                "description": "Get wallet balance from today's operations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Get wallet balance",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "date": {
+                                    "type": "string"
+                                },
+                                "total_deposits": {
+                                    "type": "integer"
+                                },
+                                "total_transfers": {
+                                    "type": "integer"
+                                },
+                                "total_withdraws": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet/daily-summary-details": {
+            "get": {
+                "description": "Get summary of daily operations for wallets",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Get daily wallet balance details",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "date": {
+                                    "type": "string"
+                                },
+                                "total_deposits": {
+                                    "type": "integer"
+                                },
+                                "total_transfers": {
+                                    "type": "integer"
+                                },
+                                "total_withdraws": {
+                                    "type": "integer"
                                 }
                             }
                         }

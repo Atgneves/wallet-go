@@ -5,8 +5,6 @@ info:
     email: alanagro.ufv@gmail.com
     name: Alan Neves
   description: API for Managing Digital Wallets
-  license:
-    name: MIT
   title: Wallet API
   version: 1.0.0
 paths:
@@ -379,6 +377,72 @@ paths:
                 type: string
             type: object
       summary: Withdraw from wallet
+      tags:
+      - Wallet
+  /wallet/daily-summary:
+    get:
+      consumes:
+      - application/json
+      description: Get wallet balance from today's operations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              date:
+                type: string
+              total_deposits:
+                type: integer
+              total_transfers:
+                type: integer
+              total_withdraws:
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Get wallet balance
+      tags:
+      - Wallet
+  /wallet/daily-summary-details:
+    get:
+      consumes:
+      - application/json
+      description: Get summary of daily operations for wallets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              date:
+                type: string
+              total_deposits:
+                type: integer
+              total_transfers:
+                type: integer
+              total_withdraws:
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Get daily wallet balance details
       tags:
       - Wallet
 schemes:

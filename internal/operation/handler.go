@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"wallet-go/internal/shared/errors"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -66,6 +67,15 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, responses)
 }
 
+// GetDailySummary godoc
+// @Summary Get wallet balance
+// @Description Get wallet balance from today's operations
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{date=string,total_deposits=int,total_withdraws=int,total_transfers=int}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/daily-summary [get]
 func (h *Handler) GetDailySummary(c *gin.Context) {
 	walletIDParam := c.Query("walletId")
 	if walletIDParam == "" {
@@ -104,6 +114,15 @@ func (h *Handler) GetDailySummary(c *gin.Context) {
 	c.JSON(http.StatusOK, summary)
 }
 
+// GetDailySummaryDetails godoc
+// @Summary Get daily wallet balance details
+// @Description Get summary of daily operations for wallets
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{date=string,total_deposits=int,total_withdraws=int,total_transfers=int}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/daily-summary-details [get]
 func (h *Handler) GetDailySummaryDetails(c *gin.Context) {
 	walletIDParam := c.Query("walletId")
 	if walletIDParam == "" {

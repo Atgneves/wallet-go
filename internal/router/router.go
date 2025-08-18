@@ -68,16 +68,18 @@ func Setup(mongoClient *database.MongoClient, kafkaProducer *kafka.Producer, cfg
 func setupWalletRoutes(r *gin.Engine, walletHandler *wallet.Handler, operationHandler *operation.Handler) {
 	walletGroup := r.Group("/wallet")
 	{
-		walletGroup.GET("", walletHandler.List)
 		walletGroup.POST("", walletHandler.Create)
+		walletGroup.GET("", walletHandler.List)
 		walletGroup.GET("/:id", walletHandler.GetByID)
 		walletGroup.PATCH("/:id", walletHandler.Patch)
 		walletGroup.POST("/:id/deposit", walletHandler.Deposit)
 		walletGroup.POST("/:id/withdraw", walletHandler.Withdraw)
 		walletGroup.POST("/:id/transfer", walletHandler.Transfer)
 
-		// Operation summary route under wallet
-		walletGroup.GET("/operation/daily-summary", operationHandler.GetDailySummary)
+		// Rotas de operation movidas para dentro do grupo wallet
+		walletGroup.GET("/daily-summary", operationHandler.GetDailySummary)
+		walletGroup.GET("/daily-summary-details", operationHandler.GetDailySummaryDetails)
+
 	}
 }
 
@@ -86,8 +88,6 @@ func setupOperationRoutes(r *gin.Engine, operationHandler *operation.Handler) {
 	{
 		operationGroup.GET("", operationHandler.List)
 		operationGroup.GET("/:operationId", operationHandler.GetByID)
-		operationGroup.GET("/daily-summary", operationHandler.GetDailySummary)
-		operationGroup.GET("/daily-summary-details", operationHandler.GetDailySummaryDetails)
 	}
 }
 
