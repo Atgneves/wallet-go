@@ -32,6 +32,17 @@ func NewHandler(service *Service, operationService *operation.Service, producer 
 	}
 }
 
+// Create godoc
+// @Summary Create wallet
+// @Description Create a new wallet for a customer
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Param request body object{customer_id=string} true "Wallet creation request"
+// @Success 201 {object} object{id=string,customer_id=string,current_amount_in_cents=int,active=bool,created_at=string}
+// @Failure 400 {object} object{error=string,message=string}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet [post]
 func (h *Handler) Create(c *gin.Context) {
 	var request WalletRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -53,6 +64,18 @@ func (h *Handler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
+// GetByID godoc
+// @Summary Get wallet by ID
+// @Description Get wallet details by wallet ID
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Param id path string true "Wallet ID"
+// @Success 200 {object} object{id=string,customer_id=string,current_amount_in_cents=int,active=bool,operations=array}
+// @Failure 400 {object} object{error=string,message=string}
+// @Failure 404 {object} object{error=string,message=string}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/{id} [get]
 func (h *Handler) GetByID(c *gin.Context) {
 	idParam := c.Param("id")
 	walletID, err := uuid.Parse(idParam)
@@ -85,6 +108,15 @@ func (h *Handler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// List godoc
+// @Summary List wallets
+// @Description List all wallets
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Success 200 {array} object{id=string,customer_id=string,current_amount_in_cents=int,active=bool}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet [get]
 func (h *Handler) List(c *gin.Context) {
 	wallets, err := h.service.List(c.Request.Context())
 	if err != nil {
@@ -109,6 +141,19 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, responses)
 }
 
+// Patch godoc
+// @Summary Update wallet
+// @Description Update wallet status (active/blocked)
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Param id path string true "Wallet ID"
+// @Param request body object{active=bool,blocked=bool} true "Wallet patch request"
+// @Success 200 {object} object{id=string,customer_id=string,current_amount_in_cents=int,active=bool,blocked=bool}
+// @Failure 400 {object} object{error=string,message=string}
+// @Failure 404 {object} object{error=string,message=string}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/{id} [patch]
 func (h *Handler) Patch(c *gin.Context) {
 	idParam := c.Param("id")
 	walletID, err := uuid.Parse(idParam)
@@ -137,6 +182,18 @@ func (h *Handler) Patch(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// Deposit godoc
+// @Summary Deposit to wallet
+// @Description Deposit money to wallet (async operation)
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Param id path string true "Wallet ID"
+// @Param request body object{amount_in_cents=int} true "Deposit request"
+// @Success 202 {object} object{message=string}
+// @Failure 400 {object} object{error=string,message=string}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/{id}/deposit [post]
 func (h *Handler) Deposit(c *gin.Context) {
 	idParam := c.Param("id")
 	walletID, err := uuid.Parse(idParam)
@@ -167,6 +224,18 @@ func (h *Handler) Deposit(c *gin.Context) {
 	c.JSON(http.StatusAccepted, response)
 }
 
+// Withdraw godoc
+// @Summary Withdraw from wallet
+// @Description Withdraw money from wallet (async operation)
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Param id path string true "Wallet ID"
+// @Param request body object{amount_in_cents=int} true "Withdraw request"
+// @Success 202 {object} object{message=string}
+// @Failure 400 {object} object{error=string,message=string}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/{id}/withdraw [post]
 func (h *Handler) Withdraw(c *gin.Context) {
 	idParam := c.Param("id")
 	walletID, err := uuid.Parse(idParam)
@@ -197,6 +266,18 @@ func (h *Handler) Withdraw(c *gin.Context) {
 	c.JSON(http.StatusAccepted, response)
 }
 
+// Transfer godoc
+// @Summary Transfer between wallets
+// @Description Transfer money between wallets (async operation)
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Param id path string true "Source Wallet ID"
+// @Param request body object{amount_in_cents=int,wallet_destination_id=string} true "Transfer request"
+// @Success 202 {object} object{message=string}
+// @Failure 400 {object} object{error=string,message=string}
+// @Failure 500 {object} object{error=string,message=string}
+// @Router /wallet/{id}/transfer [post]
 func (h *Handler) Transfer(c *gin.Context) {
 	idParam := c.Param("id")
 	walletID, err := uuid.Parse(idParam)
@@ -228,13 +309,13 @@ func (h *Handler) Transfer(c *gin.Context) {
 	c.JSON(http.StatusAccepted, response)
 }
 
-// mapToResponse mapeia Wallet para WalletResponse
+// mapToResponse mapper Wallet to WalletResponse
 func (h *Handler) mapToResponse(wallet *Wallet) *WalletResponse {
 	return &WalletResponse{
 		Id:                   wallet.WalletID,
 		CustomerID:           wallet.CustomerID,
 		CurrentAmountInCents: wallet.CurrentAmountInCents,
-		Operations:           wallet.Operations, // ← Vai incluir as operações carregadas
+		Operations:           wallet.Operations,
 		Active:               wallet.Active,
 		Blocked:              wallet.Blocked,
 		CreatedAt:            wallet.CreatedAt,

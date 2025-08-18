@@ -11,6 +11,8 @@ import (
 	"wallet-go/internal/wallet"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func Setup(mongoClient *database.MongoClient, kafkaProducer *kafka.Producer, cfg *config.Config) *gin.Engine {
@@ -47,7 +49,15 @@ func Setup(mongoClient *database.MongoClient, kafkaProducer *kafka.Producer, cfg
 	operationHandler := operation.NewHandler(operationService)
 	healthHandler := health.NewHandler(healthService)
 
-	// Routes
+	// Swagger route (before another routes)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Redirect root to swagger
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(302, "/swagger/index.html")
+	})
+
+	// API Routes
 	setupWalletRoutes(r, walletHandler, operationHandler)
 	setupOperationRoutes(r, operationHandler)
 	setupHealthRoutes(r, healthHandler)

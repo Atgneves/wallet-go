@@ -1,0 +1,389 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: alanagro.ufv@gmail.com
+    name: Alan Neves
+  description: API for Managing Digital Wallets
+  license:
+    name: MIT
+  title: Wallet API
+  version: 1.0.0
+paths:
+  /wallet:
+    get:
+      consumes:
+      - application/json
+      description: List all wallets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              properties:
+                active:
+                  type: boolean
+                current_amount_in_cents:
+                  type: integer
+                customer_id:
+                  type: string
+                id:
+                  type: string
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: List wallets
+      tags:
+      - Wallet
+    post:
+      consumes:
+      - application/json
+      description: Create a new wallet for a customer
+      parameters:
+      - description: Wallet creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            customer_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              active:
+                type: boolean
+              created_at:
+                type: string
+              current_amount_in_cents:
+                type: integer
+              customer_id:
+                type: string
+              id:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Create wallet
+      tags:
+      - Wallet
+  /wallet/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get wallet details by wallet ID
+      parameters:
+      - description: Wallet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              active:
+                type: boolean
+              current_amount_in_cents:
+                type: integer
+              customer_id:
+                type: string
+              id:
+                type: string
+              operations:
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Get wallet by ID
+      tags:
+      - Wallet
+    patch:
+      consumes:
+      - application/json
+      description: Update wallet status (active/blocked)
+      parameters:
+      - description: Wallet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Wallet patch request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            active:
+              type: boolean
+            blocked:
+              type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              active:
+                type: boolean
+              blocked:
+                type: boolean
+              current_amount_in_cents:
+                type: integer
+              customer_id:
+                type: string
+              id:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Update wallet
+      tags:
+      - Wallet
+  /wallet/{id}/deposit:
+    post:
+      consumes:
+      - application/json
+      description: Deposit money to wallet (async operation)
+      parameters:
+      - description: Wallet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Deposit request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            amount_in_cents:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Deposit to wallet
+      tags:
+      - Wallet
+  /wallet/{id}/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Transfer money between wallets (async operation)
+      parameters:
+      - description: Source Wallet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Transfer request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            amount_in_cents:
+              type: integer
+            wallet_destination_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Transfer between wallets
+      tags:
+      - Wallet
+  /wallet/{id}/withdraw:
+    post:
+      consumes:
+      - application/json
+      description: Withdraw money from wallet (async operation)
+      parameters:
+      - description: Wallet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Withdraw request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            amount_in_cents:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      summary: Withdraw from wallet
+      tags:
+      - Wallet
+schemes:
+- http
+- https
+swagger: "2.0"
+tags:
+- name: Wallet

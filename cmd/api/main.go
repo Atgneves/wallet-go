@@ -1,5 +1,15 @@
 package main
 
+// @title           Wallet API
+// @version         1.0.0
+// @description     API for Managing Digital Wallets
+// @contact.name    Alan Neves
+// @contact.email   alanagro.ufv@gmail.com
+// @host            localhost:8080
+// @BasePath        /
+// @schemes         http https
+// @tag.name        Wallet
+
 import (
 	"context"
 	"log"
@@ -16,6 +26,8 @@ import (
 	"wallet-go/internal/shared/kafka"
 	"wallet-go/internal/shared/utils"
 	"wallet-go/internal/wallet"
+
+	_ "wallet-go/docs" // Importante para o Swagger
 )
 
 func main() {
