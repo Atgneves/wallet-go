@@ -1,4 +1,4 @@
-# RP Wallet - Go Implementation
+# Wallet - Go Implementation
 
 A high-performance digital wallet management service built with Go, featuring MongoDB for data persistence and Apache Kafka for asynchronous transaction processing. This implementation maintains clean architecture principles with domain-driven design.
 
